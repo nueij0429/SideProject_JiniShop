@@ -1,0 +1,69 @@
+# Java / JVM
+*.class
+*.jar
+*.war
+*.ear
+*.javadoc
+*.java.tmp
+hs_err_pid*
+replay_pid*
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+bin/
+cmake-build-debug/
+
+# IntelliJ Gitignore exceptions
+!/gradle/wrapper/gradle-wrapper.jar
+
+# Gradle
+.gradle/
+build/
+!gradlew
+!gradlew.bat
+!gradle/wrapper/gradle-wrapper.properties
+!gradle/wrapper/gradle-wrapper.jar
+
+# 로그 파일
+*.log
+logs/
+log/
+
+# 임시 파일
+*.tmp
+*.temp
+
+# Application Config
+application.properties
+application-dev.properties
+application-prod.properties
+
+# 보조 설정
+*.env
+.env.*
+secrets.*
+secret/*
+
+# MySQL & Redis
+*.sql
+*.sql.gz
+dump.rdb
+appendonly.aof
+
+# OS 관련 무시 파일
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# IDE 환경 설정 폴더 무시
+.vscode/
+*.swp
+
+# 기타
+.cache/
+temp/
