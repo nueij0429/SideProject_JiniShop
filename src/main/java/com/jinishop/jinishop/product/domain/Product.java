@@ -4,7 +4,6 @@ import com.jinishop.jinishop.product.domain.ProductStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter @Setter
@@ -25,8 +24,8 @@ public class Product {
     @Lob
     private String description;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
+    @Column(nullable = false)
+    private Long price;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

@@ -4,8 +4,6 @@ import com.jinishop.jinishop.product.domain.ProductOption;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
-
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,8 +24,8 @@ public class OrderItem {
     @JoinColumn(name = "product_option_id", nullable = false)
     private ProductOption productOption;
 
-    @Column(name = "order_price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal orderPrice;
+    @Column(name = "order_price", nullable = false)
+    private Long orderPrice;
 
     @Column(nullable = false)
     private Integer quantity;
