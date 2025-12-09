@@ -24,39 +24,70 @@ public class StockService {
     // 재고 감소 (나중에 락 적용 버전으로 확장할 예정)
     @Transactional
     public void decreaseStock(Long productOptionId, int quantity) {
+        decreaseStockInternal(productOptionId, quantity, StockHistoryReason.ORDER); // 재고 이력에는 ORDER 라는 변경 사유가 기록됨
+    }
+
+    // 관리자 재고 수동 조정
+    @Transactional
+    public void adjustStockManually(Long productOptionId, int changeAmount) {
+        if (changeAmount == 0) {
+            return;
+        }
+
+        if (changeAmount > 0) {
+            increaseStock(productOptionId, changeAmount, StockHistoryReason.MANUAL_ADJUST);
+        } else {
+            // 음수일 때는 절댓값만큼 감소
+            decreaseStockInternal(productOptionId, -changeAmount, StockHistoryReason.MANUAL_ADJUST);
+        }
+    }
+
+    // 중복을 막고 로직 재사용을 위해 decreaseStockInternal()로 분리해둠
+    // 내부용 재고 감소 로직
+    @Transactional
+    protected void decreaseStockInternal(Long productOptionId, int quantity, StockHistoryReason reason) {
+        // 옵션 ID로 ProductOption 조회
         ProductOption option = productOptionRepository.findById(productOptionId)
                 .orElseThrow(() -> new NoSuchElementException("상품 옵션을 찾을 수 없음. id=" + productOptionId));
 
+        // 옵션으로 Stock 조회
         Stock stock = stockRepository.findByProductOption(option)
                 .orElseThrow(() -> new NoSuchElementException("재고 정보를 찾을 수 없음. optionId=" + productOptionId));
 
         if (stock.getQuantity() < quantity) {
-            throw new IllegalStateException("재고 부족. 요청수량=" + quantity + ", 현재재고=" + stock.getQuantity());
+            throw new IllegalStateException(
+                    "재고 부족. 요청수량=" + quantity + ", 현재재고=" + stock.getQuantity()
+            );
         }
 
+        // 문제 없으면 재고 차감
         stock.setQuantity(stock.getQuantity() - quantity);
 
-        // 재고 히스토리 기록
+        // StockHistory 기록 저장
         StockHistory history = StockHistory.builder()
                 .productOption(option)
                 .changeAmount(-quantity)
-                .reason(StockHistoryReason.ORDER)
+                .reason(reason)
                 .build();
 
         stockHistoryRepository.save(history);
     }
 
-    // 재고 증가 (관리자 수동 조정)
+    // 내부용 재고 증가 로직
     @Transactional
-    public void increaseStock(Long productOptionId, int quantity, StockHistoryReason reason) {
+    protected void increaseStock(Long productOptionId, int quantity, StockHistoryReason reason) {
+        // 옵션 ID로 ProductOption 조회
         ProductOption option = productOptionRepository.findById(productOptionId)
                 .orElseThrow(() -> new NoSuchElementException("상품 옵션을 찾을 수 없음. id=" + productOptionId));
 
+        // 옵션으로 Stock 조회
         Stock stock = stockRepository.findByProductOption(option)
                 .orElseThrow(() -> new NoSuchElementException("재고 정보를 찾을 수 없음. optionId=" + productOptionId));
 
+        // 재고 증가
         stock.setQuantity(stock.getQuantity() + quantity);
 
+        // StockHistory 기록 저장
         StockHistory history = StockHistory.builder()
                 .productOption(option)
                 .changeAmount(quantity)

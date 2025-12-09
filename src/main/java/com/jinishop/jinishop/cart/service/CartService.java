@@ -36,8 +36,8 @@ public class CartService {
     public Cart getOrCreateCart(Long userId) {
         User user = userService.getUser(userId);
         return cartRepository.findByUser(user)
-                .orElseGet(() -> {
-                    Cart cart = Cart.builder()
+                .orElseGet(() -> {  // lazy 생성 패턴
+                    Cart cart = Cart.builder() // 장바구니 없으면 생성
                             .user(user)
                             .build();
                     return cartRepository.save(cart);
@@ -92,6 +92,7 @@ public class CartService {
         cartItemRepository.deleteById(cartItemId);
     }
 
+    // 장바구니에 담긴 모든 상품 반환
     public List<CartItem> getCartItems(Long userId) {
         Cart cart = getCart(userId);
         if (cart == null) return List.of();
