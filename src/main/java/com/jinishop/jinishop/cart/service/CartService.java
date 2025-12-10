@@ -4,6 +4,8 @@ import com.jinishop.jinishop.cart.domain.Cart;
 import com.jinishop.jinishop.cart.domain.CartItem;
 import com.jinishop.jinishop.cart.repository.CartItemRepository;
 import com.jinishop.jinishop.cart.repository.CartRepository;
+import com.jinishop.jinishop.global.exception.BusinessException;
+import com.jinishop.jinishop.global.exception.ErrorCode;
 import com.jinishop.jinishop.product.domain.ProductOption;
 import com.jinishop.jinishop.product.repository.ProductOptionRepository;
 import com.jinishop.jinishop.user.domain.User;
@@ -28,7 +30,8 @@ public class CartService {
     // 회원의 장바구니 조회
     public Cart getCart(Long userId) {
         User user = userService.getUser(userId);
-        return cartRepository.findByUser(user).orElse(null);
+        return cartRepository.findByUser(user)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CART_NOT_FOUND)); // 장바구니 조회 실패 시
     }
 
     // 회원의 장바구니 조회 또는 생성
@@ -50,7 +53,7 @@ public class CartService {
         Cart cart = getOrCreateCart(userId);
 
         ProductOption option = productOptionRepository.findById(productOptionId)
-                .orElseThrow(() -> new NoSuchElementException("상품 옵션을 찾을 수 없음. id=" + productOptionId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_OPTION_NOT_FOUND)); // 상품 옵션을 찾을 수 없을 시
 
         // 이미 같은 옵션이 담겨 있으면 수량만 증가
         List<CartItem> items = cartItemRepository.findByCart(cart);
@@ -75,7 +78,7 @@ public class CartService {
     @Transactional
     public void updateItemQuantity(Long cartItemId, int quantity) {
         CartItem item = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new NoSuchElementException("장바구니 아이템을 찾을 수 없음. id=" + cartItemId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND)); // 장바구니 상품을 찾을 수 없을 때
 
         // dirty checking (상태 변경 검사)
         // 수량이 0 이하이면 삭제
@@ -95,7 +98,6 @@ public class CartService {
     // 장바구니에 담긴 모든 상품 반환
     public List<CartItem> getCartItems(Long userId) {
         Cart cart = getCart(userId);
-        if (cart == null) return List.of();
         return cartItemRepository.findByCart(cart);
     }
 }

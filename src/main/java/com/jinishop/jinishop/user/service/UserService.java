@@ -1,5 +1,7 @@
 package com.jinishop.jinishop.user.service;
 
+import com.jinishop.jinishop.global.exception.BusinessException;
+import com.jinishop.jinishop.global.exception.ErrorCode;
 import com.jinishop.jinishop.user.domain.User;
 import com.jinishop.jinishop.user.domain.UserRole;
 import com.jinishop.jinishop.user.repository.UserRepository;
@@ -19,18 +21,22 @@ public class UserService {
     // id로 회원 조회
     public User getUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException("회원을 찾을 수 없음. id=" + userId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND)); // 사용자 조회 실패
     }
 
     // email로 회원 조회
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new NoSuchElementException("이메일로 회원을 찾을 수 없음. email=" + email));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND)); // 사용자 조회 실패
     }
 
     // 회원 생성
     @Transactional
     public User createUser(String email, String rawPassword, String name) {
+        if (userRepository.existsByEmail(email)) {
+            throw new BusinessException(ErrorCode.USER_EMAIL_DUPLICATED); // 중복된 이메일 예외처리
+        }
+
         // password는 나중에 암호화 로직 추가할 예정
         User user = User.builder()
                 .email(email)

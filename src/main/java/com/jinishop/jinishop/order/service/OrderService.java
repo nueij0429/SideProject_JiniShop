@@ -4,6 +4,8 @@ import com.jinishop.jinishop.cart.domain.Cart;
 import com.jinishop.jinishop.cart.domain.CartItem;
 import com.jinishop.jinishop.cart.repository.CartItemRepository;
 import com.jinishop.jinishop.cart.service.CartService;
+import com.jinishop.jinishop.global.exception.BusinessException;
+import com.jinishop.jinishop.global.exception.ErrorCode;
 import com.jinishop.jinishop.order.domain.Order;
 import com.jinishop.jinishop.order.domain.OrderItem;
 import com.jinishop.jinishop.order.domain.OrderStatus;
@@ -39,18 +41,18 @@ public class OrderService {
         Cart cart = cartService.getCart(userId);
 
         if (cart == null) {
-            throw new IllegalStateException("장바구니가 비어 있음");
+            throw new BusinessException(ErrorCode.CART_NOT_FOUND); // 장바구니가 없을 시
         }
 
         List<CartItem> cartItems = cartItemRepository.findByCart(cart);
         if (cartItems.isEmpty()) {
-            throw new IllegalStateException("장바구니에 상품이 없음");
+            throw new BusinessException(ErrorCode.CART_EMPTY); // 장바구니가 비어있을 시
         }
 
         // 총 금액 계산
         long totalAmount = cartItems.stream()
                 .mapToLong(item -> {
-                    long price = item.getProductOption().getProduct().getPrice().longValue();
+                    long price = item.getProductOption().getProduct().getPrice();
                     return price * item.getQuantity();
                 })
                 .sum();
@@ -98,6 +100,6 @@ public class OrderService {
     @Transactional(readOnly = true)
     public Order getOrder(Long orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new NoSuchElementException("주문을 찾을 수 없음. id=" + orderId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)); // 주문 조회 실패
     }
 }

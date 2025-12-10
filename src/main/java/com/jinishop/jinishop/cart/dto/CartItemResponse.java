@@ -21,7 +21,7 @@ public class CartItemResponse {
         this.productName = item.getProductOption().getProduct().getName();
         this.color = item.getProductOption().getColor();
         this.size = item.getProductOption().getSize();
-        this.price = item.getProductOption().getProduct().getPrice().longValue();
+        this.price = item.getProductOption().getProduct().getPrice();
         this.quantity = item.getQuantity();
     }
 }

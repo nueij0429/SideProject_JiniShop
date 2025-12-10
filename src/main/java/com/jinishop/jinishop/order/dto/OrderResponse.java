@@ -18,7 +18,7 @@ public class OrderResponse {
     public OrderResponse(Order order, List<OrderItemResponse> items) {
         this.orderId = order.getId();
         this.userId = order.getUser().getId();
-        this.totalAmount = order.getTotalAmount().longValue();
+        this.totalAmount = order.getTotalAmount();
         this.status = order.getStatus().name();
         this.items = items;
     }

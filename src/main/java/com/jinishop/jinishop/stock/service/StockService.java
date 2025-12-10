@@ -1,5 +1,7 @@
 package com.jinishop.jinishop.stock.service;
 
+import com.jinishop.jinishop.global.exception.BusinessException;
+import com.jinishop.jinishop.global.exception.ErrorCode;
 import com.jinishop.jinishop.product.domain.ProductOption;
 import com.jinishop.jinishop.product.repository.ProductOptionRepository;
 import com.jinishop.jinishop.stock.domain.Stock;
@@ -31,7 +33,7 @@ public class StockService {
     @Transactional
     public void adjustStockManually(Long productOptionId, int changeAmount) {
         if (changeAmount == 0) {
-            return;
+            throw new BusinessException(ErrorCode.STOCK_ADJUST_AMOUNT_INVALID); // 유효한 재고 수정 값이 아닐 때
         }
 
         if (changeAmount > 0) {
@@ -48,16 +50,14 @@ public class StockService {
     protected void decreaseStockInternal(Long productOptionId, int quantity, StockHistoryReason reason) {
         // 옵션 ID로 ProductOption 조회
         ProductOption option = productOptionRepository.findById(productOptionId)
-                .orElseThrow(() -> new NoSuchElementException("상품 옵션을 찾을 수 없음. id=" + productOptionId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_OPTION_NOT_FOUND)); // 상품 옵션을 찾을 수 없을 때
 
         // 옵션으로 Stock 조회
         Stock stock = stockRepository.findByProductOption(option)
-                .orElseThrow(() -> new NoSuchElementException("재고 정보를 찾을 수 없음. optionId=" + productOptionId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STOCK_NOT_FOUND)); // 재고 정보를 찾을 수 없을 때
 
         if (stock.getQuantity() < quantity) {
-            throw new IllegalStateException(
-                    "재고 부족. 요청수량=" + quantity + ", 현재재고=" + stock.getQuantity()
-            );
+            throw new BusinessException(ErrorCode.STOCK_NOT_ENOUGH); // 재고 부족 시
         }
 
         // 문제 없으면 재고 차감
@@ -78,11 +78,11 @@ public class StockService {
     protected void increaseStock(Long productOptionId, int quantity, StockHistoryReason reason) {
         // 옵션 ID로 ProductOption 조회
         ProductOption option = productOptionRepository.findById(productOptionId)
-                .orElseThrow(() -> new NoSuchElementException("상품 옵션을 찾을 수 없음. id=" + productOptionId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_OPTION_NOT_FOUND)); // 상품 옵션을 찾을 수 없을 때
 
         // 옵션으로 Stock 조회
         Stock stock = stockRepository.findByProductOption(option)
-                .orElseThrow(() -> new NoSuchElementException("재고 정보를 찾을 수 없음. optionId=" + productOptionId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STOCK_NOT_FOUND)); // 재고 정보를 찾을 수 없을 때
 
         // 재고 증가
         stock.setQuantity(stock.getQuantity() + quantity);

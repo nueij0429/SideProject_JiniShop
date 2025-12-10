@@ -21,7 +21,7 @@ public class OrderItemResponse {
         this.productName = orderItem.getProductOption().getProduct().getName();
         this.color = orderItem.getProductOption().getColor();
         this.size = orderItem.getProductOption().getSize();
-        this.orderPrice = orderItem.getOrderPrice().longValue();
+        this.orderPrice = orderItem.getOrderPrice();
         this.quantity = orderItem.getQuantity();
     }
 }
