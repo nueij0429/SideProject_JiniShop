@@ -40,10 +40,6 @@ public class OrderService {
         User user = userService.getUser(userId);
         Cart cart = cartService.getCart(userId);
 
-        if (cart == null) {
-            throw new BusinessException(ErrorCode.CART_NOT_FOUND); // 장바구니가 없을 시
-        }
-
         List<CartItem> cartItems = cartItemRepository.findByCart(cart);
         if (cartItems.isEmpty()) {
             throw new BusinessException(ErrorCode.CART_EMPTY); // 장바구니가 비어있을 시
@@ -70,8 +66,8 @@ public class OrderService {
         for (CartItem cartItem : cartItems) {
             ProductOption option = cartItem.getProductOption();
 
-            // 재고 차감 (동시성 & 낙관적락은 StockService 안에 캡슐화)
-            stockService.decreaseStock(option.getId(), cartItem.getQuantity());
+            // 재고 차감 (비관적 락 버전)
+            stockService.decreaseStockWithPessimisticLock(option.getId(), cartItem.getQuantity());
 
             OrderItem orderItem = OrderItem.builder()
                     .order(order)

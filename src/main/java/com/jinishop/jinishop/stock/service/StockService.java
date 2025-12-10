@@ -23,13 +23,19 @@ public class StockService {
     private final ProductOptionRepository productOptionRepository;
     private final StockHistoryRepository stockHistoryRepository;
 
-    // 재고 감소 (나중에 락 적용 버전으로 확장할 예정)
+    // 재고 감소 기본 버전 - 낙관적 락 사용: @Version
     @Transactional
     public void decreaseStock(Long productOptionId, int quantity) {
-        decreaseStockInternal(productOptionId, quantity, StockHistoryReason.ORDER); // 재고 이력에는 ORDER 라는 변경 사유가 기록됨
+        decreaseStockInternal(productOptionId, quantity, StockHistoryReason.ORDER, false); // 재고 이력에는 ORDER 라는 변경 사유가 기록됨
     }
 
-    // 관리자 재고 수동 조정
+    // 비관적 락 버전
+    @Transactional
+    public void decreaseStockWithPessimisticLock(Long productOptionId, int quantity) {
+        decreaseStockInternal(productOptionId, quantity, StockHistoryReason.ORDER, true);
+    }
+
+    // 관리자 재고 수동 조정 - 낙관적 락
     @Transactional
     public void adjustStockManually(Long productOptionId, int changeAmount) {
         if (changeAmount == 0) {
@@ -37,23 +43,30 @@ public class StockService {
         }
 
         if (changeAmount > 0) {
-            increaseStock(productOptionId, changeAmount, StockHistoryReason.MANUAL_ADJUST);
+            increaseStock(productOptionId, changeAmount, StockHistoryReason.MANUAL_ADJUST, false);
         } else {
             // 음수일 때는 절댓값만큼 감소
-            decreaseStockInternal(productOptionId, -changeAmount, StockHistoryReason.MANUAL_ADJUST);
+            decreaseStockInternal(productOptionId, -changeAmount, StockHistoryReason.MANUAL_ADJUST, false);
         }
     }
 
     // 중복을 막고 로직 재사용을 위해 decreaseStockInternal()로 분리해둠
     // 내부용 재고 감소 로직
     @Transactional
-    protected void decreaseStockInternal(Long productOptionId, int quantity, StockHistoryReason reason) {
+    protected void decreaseStockInternal(
+            Long productOptionId,
+            int quantity,
+            StockHistoryReason reason,
+            boolean usePessimisticLock
+    ) {
         // 옵션 ID로 ProductOption 조회
         ProductOption option = productOptionRepository.findById(productOptionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_OPTION_NOT_FOUND)); // 상품 옵션을 찾을 수 없을 때
 
         // 옵션으로 Stock 조회
-        Stock stock = stockRepository.findByProductOption(option)
+        Stock stock = (usePessimisticLock
+                ? stockRepository.findWithLockByProductOption(option)
+                : stockRepository.findByProductOption(option))
                 .orElseThrow(() -> new BusinessException(ErrorCode.STOCK_NOT_FOUND)); // 재고 정보를 찾을 수 없을 때
 
         if (stock.getQuantity() < quantity) {
@@ -64,18 +77,23 @@ public class StockService {
         stock.setQuantity(stock.getQuantity() - quantity);
 
         // StockHistory 기록 저장
-        StockHistory history = StockHistory.builder()
-                .productOption(option)
-                .changeAmount(-quantity)
-                .reason(reason)
-                .build();
-
-        stockHistoryRepository.save(history);
+        stockHistoryRepository.save(
+                StockHistory.builder()
+                    .productOption(option)
+                    .changeAmount(-quantity)
+                    .reason(reason)
+                    .build()
+        );
     }
 
     // 내부용 재고 증가 로직
     @Transactional
-    protected void increaseStock(Long productOptionId, int quantity, StockHistoryReason reason) {
+    protected void increaseStock(
+            Long productOptionId,
+            int quantity,
+            StockHistoryReason reason,
+            boolean usePessimisticLock
+    ) {
         // 옵션 ID로 ProductOption 조회
         ProductOption option = productOptionRepository.findById(productOptionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_OPTION_NOT_FOUND)); // 상품 옵션을 찾을 수 없을 때
@@ -88,12 +106,12 @@ public class StockService {
         stock.setQuantity(stock.getQuantity() + quantity);
 
         // StockHistory 기록 저장
-        StockHistory history = StockHistory.builder()
-                .productOption(option)
-                .changeAmount(quantity)
-                .reason(reason)
-                .build();
-
-        stockHistoryRepository.save(history);
+        stockHistoryRepository.save(
+                StockHistory.builder()
+                        .productOption(option)
+                        .changeAmount(-quantity)
+                        .reason(reason)
+                        .build()
+        );
     }
 }
