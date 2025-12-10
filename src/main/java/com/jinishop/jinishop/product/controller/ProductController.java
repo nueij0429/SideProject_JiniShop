@@ -1,5 +1,6 @@
 package com.jinishop.jinishop.product.controller;
 
+import com.jinishop.jinishop.global.response.ResponseDto;
 import com.jinishop.jinishop.product.domain.Product;
 import com.jinishop.jinishop.product.domain.ProductOption;
 import com.jinishop.jinishop.product.dto.ProductOptionResponse;
@@ -21,33 +22,35 @@ public class ProductController {
 
     // 전체 상품 목록 조회
     @GetMapping
-    public List<ProductResponse> getProducts() {
+    public ResponseDto<List<ProductResponse>> getProducts() {
         List<Product> products = productService.getAllProducts();
-        return products.stream()
+        List<ProductResponse> result = products.stream()
                 .map(ProductResponse::new)
                 .toList();
+        return ResponseDto.ok(result);
     }
 
     // 상품 단건 조회
     @GetMapping("/{productId}")
-    public ProductResponse getProduct(@PathVariable Long productId) {
+    public ResponseDto<ProductResponse> getProduct(@PathVariable Long productId) {
         Product product = productService.getProduct(productId);
-        return new ProductResponse(product);
+        return ResponseDto.ok(new ProductResponse(product));
     }
 
     // 특정 상품의 옵션 목록 조회
     @GetMapping("/{productId}/options")
-    public List<ProductOptionResponse> getProductOptions(@PathVariable Long productId) {
+    public ResponseDto<List<ProductOptionResponse>> getProductOptions(@PathVariable Long productId) {
         List<ProductOption> options = productService.getOptionsByProduct(productId);
-        return options.stream()
+        List<ProductOptionResponse> result = options.stream()
                 .map(ProductOptionResponse::new)
                 .toList();
+        return ResponseDto.ok(result);
     }
 
     // 특정 옵션의 재고 조회
     @GetMapping("/options/{optionId}/stock")
-    public StockResponse getStock(@PathVariable Long optionId) {
+    public ResponseDto<StockResponse> getStock(@PathVariable Long optionId) {
         Stock stock = productService.getStockByOption(optionId);
-        return new StockResponse(stock);
+        return ResponseDto.ok(new StockResponse(stock));
     }
 }

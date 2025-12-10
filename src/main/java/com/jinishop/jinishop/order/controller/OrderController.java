@@ -1,5 +1,6 @@
 package com.jinishop.jinishop.order.controller;
 
+import com.jinishop.jinishop.global.response.ResponseDto;
 import com.jinishop.jinishop.order.domain.Order;
 import com.jinishop.jinishop.order.domain.OrderItem;
 import com.jinishop.jinishop.order.dto.OrderItemResponse;
@@ -22,7 +23,7 @@ public class OrderController {
 
     // 주문 생성
     @PostMapping
-    public OrderResponse placeOrder(@RequestBody PlaceOrderRequest request) {
+    public ResponseDto<OrderResponse> placeOrder(@RequestBody PlaceOrderRequest request) {
         Long orderId = orderService.placeOrder(request.getUserId());
         Order order = orderService.getOrder(orderId);
         List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
@@ -31,15 +32,15 @@ public class OrderController {
                 .map(OrderItemResponse::new)
                 .toList();
 
-        return new OrderResponse(order, itemResponses);
+        return ResponseDto.ok(new OrderResponse(order, itemResponses));
     }
 
     // 내 주문 목록 조회
     @GetMapping
-    public List<OrderResponse> getOrders(@RequestParam Long userId) {
+    public ResponseDto<List<OrderResponse>> getOrders(@RequestParam Long userId) {
         List<Order> orders = orderService.getOrders(userId);
 
-        return orders.stream()
+        List<OrderResponse> result = orders.stream()
                 .map(order -> {
                     List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
                     List<OrderItemResponse> itemResponses = orderItems.stream()
@@ -48,11 +49,12 @@ public class OrderController {
                     return new OrderResponse(order, itemResponses);
                 })
                 .toList();
+        return ResponseDto.ok(result);
     }
 
     // 주문 상세 조회
     @GetMapping("/{orderId}")
-    public OrderResponse getOrder(@PathVariable Long orderId) {
+    public ResponseDto<OrderResponse> getOrder(@PathVariable Long orderId) {
         Order order = orderService.getOrder(orderId);
         List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
 
@@ -60,6 +62,6 @@ public class OrderController {
                 .map(OrderItemResponse::new)
                 .toList();
 
-        return new OrderResponse(order, itemResponses);
+        return ResponseDto.ok(new OrderResponse(order, itemResponses));
     }
 }

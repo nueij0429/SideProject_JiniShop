@@ -1,5 +1,6 @@
 package com.jinishop.jinishop.admin.controller;
 
+import com.jinishop.jinishop.global.response.ResponseDto;
 import com.jinishop.jinishop.stock.domain.Stock;
 import com.jinishop.jinishop.stock.dto.StockAdjustRequest;
 import com.jinishop.jinishop.stock.dto.StockResponse;
@@ -20,19 +21,21 @@ public class AdminStockController {
 
     // 관리자용 전체 재고 목록 조회
     @GetMapping
-    public List<StockResponse> getAllStocks() {
+    public ResponseDto<List<StockResponse>> getAllStocks() {
         List<Stock> stocks = stockRepository.findAll();
-        return stocks.stream()
+        List<StockResponse> result = stocks.stream()
                 .map(StockResponse::new)
                 .toList();
+        return ResponseDto.ok(result);
     }
 
     // 관리자용 재고 수동 조정
     @PatchMapping("/{productOptionId}")
-    public void adjustStock(
+    public ResponseDto<Void> adjustStock(
             @PathVariable Long productOptionId,
             @RequestBody StockAdjustRequest request
     ) {
         stockService.adjustStockManually(productOptionId, request.getChangeAmount());
+        return ResponseDto.ok(null);
     }
 }
