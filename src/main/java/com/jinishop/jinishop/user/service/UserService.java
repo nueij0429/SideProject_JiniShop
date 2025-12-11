@@ -6,6 +6,7 @@ import com.jinishop.jinishop.user.domain.User;
 import com.jinishop.jinishop.user.domain.UserRole;
 import com.jinishop.jinishop.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import java.util.NoSuchElementException;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // id로 회원 조회
     public User getUser(Long userId) {
@@ -32,15 +34,14 @@ public class UserService {
 
     // 회원 생성
     @Transactional
-    public User createUser(String email, String rawPassword, String name) {
+    public User createUser(String email, String encodedPassword, String name) {
         if (userRepository.existsByEmail(email)) {
             throw new BusinessException(ErrorCode.USER_EMAIL_DUPLICATED); // 중복된 이메일 예외처리
         }
 
-        // password는 나중에 암호화 로직 추가할 예정
         User user = User.builder()
                 .email(email)
-                .password(rawPassword)
+                .password(encodedPassword)
                 .name(name)
                 .role(UserRole.USER)
                 .build();

@@ -7,7 +7,9 @@ import com.jinishop.jinishop.cart.dto.UpdateCartItemQuantityRequest;
 import com.jinishop.jinishop.cart.service.CartService;
 import com.jinishop.jinishop.global.response.ResponseDto;
 import com.jinishop.jinishop.product.dto.ProductResponse;
+import com.jinishop.jinishop.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,10 +21,12 @@ public class CartController {
 
     private final CartService cartService;
 
-    // 장바구니 조회 (나중에 Security 붙이고 인증 정보에서 가져오는 형태로 변경할 예정)
+    // 장바구니 조회
     @GetMapping
-    public ResponseDto<List<CartItemResponse>> getCartItems(@RequestParam Long userId) {
+    public ResponseDto<List<CartItemResponse>> getCartItems(@AuthenticationPrincipal CustomUserDetails user) {
+        Long userId = user.getId();
         List<CartItem> items = cartService.getCartItems(userId);
+        
         List<CartItemResponse> result = items.stream()
                 .map(CartItemResponse::new)
                 .toList();
