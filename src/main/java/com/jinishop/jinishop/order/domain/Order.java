@@ -14,13 +14,21 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "`order`") // 예약어 백틱
+@Table(
+        name = "`order`", // 예약어 백틱
+        indexes = {
+                @Index(name = "idx_order_user_id", columnList = "user_id")
+                // 나중에 정렬 기준으로 created_at 쓸 때 사용
+                // @Index(name = "idx_order_user_created_at", columnList = "user_id, created_at")
+        }
+)
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 사용자별 주문 목록 조회 - user_id 인덱스 타게 됨
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

@@ -11,13 +11,19 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "cart")
+@Table(
+        name = "cart",
+        indexes = {
+                @Index(name = "idx_cart_user_id", columnList = "user_id")
+        }
+)
 public class Cart {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 사용자별 장바구니 조회 - user_id 인덱스 타게 됨
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
