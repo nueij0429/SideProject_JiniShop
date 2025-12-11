@@ -27,7 +27,7 @@ public class CartService {
     private final ProductOptionRepository productOptionRepository;
     private final UserService userService;
 
-    // 회원의 장바구니 조회
+    // 회원의 장바구니 조회 (엔티티 자체 조회용)
     public Cart getCart(Long userId) {
         User user = userService.getUser(userId);
         return cartRepository.findByUser(user)
@@ -95,7 +95,7 @@ public class CartService {
         cartItemRepository.deleteById(cartItemId);
     }
 
-    // 장바구니에 담긴 모든 상품 반환
+    // 장바구니에 담긴 모든 상품 반환 (조회 API용) - N+1 해결 버전
     public List<CartItem> getCartItems(Long userId) {
         Cart cart = getCart(userId);
         return cartItemRepository.findByCart(cart);

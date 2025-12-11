@@ -25,10 +25,12 @@ public class OrderController {
     @PostMapping
     public ResponseDto<OrderResponse> placeOrder(@RequestBody PlaceOrderRequest request) {
         Long orderId = orderService.placeOrder(request.getUserId());
-        Order order = orderService.getOrder(orderId);
-        List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
 
-        List<OrderItemResponse> itemResponses = orderItems.stream()
+        Order order = orderService.getOrder(orderId); // 주문 + 아이템까지 한 번에 가져옴
+
+        //List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
+
+        List<OrderItemResponse> itemResponses = order.getOrderItems().stream()
                 .map(OrderItemResponse::new)
                 .toList();
 
@@ -42,8 +44,8 @@ public class OrderController {
 
         List<OrderResponse> result = orders.stream()
                 .map(order -> {
-                    List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
-                    List<OrderItemResponse> itemResponses = orderItems.stream()
+                    //List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
+                    List<OrderItemResponse> itemResponses = order.getOrderItems().stream()
                             .map(OrderItemResponse::new)
                             .toList();
                     return new OrderResponse(order, itemResponses);
@@ -55,10 +57,11 @@ public class OrderController {
     // 주문 상세 조회
     @GetMapping("/{orderId}")
     public ResponseDto<OrderResponse> getOrder(@PathVariable Long orderId) {
-        Order order = orderService.getOrder(orderId);
-        List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
+        Order order = orderService.getOrder(orderId); // 주문 + 아이템까지 한 번에 가져옴
 
-        List<OrderItemResponse> itemResponses = orderItems.stream()
+        //List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
+
+        List<OrderItemResponse> itemResponses = order.getOrderItems().stream()
                 .map(OrderItemResponse::new)
                 .toList();
 

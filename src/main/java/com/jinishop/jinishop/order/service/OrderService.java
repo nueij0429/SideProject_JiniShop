@@ -85,17 +85,19 @@ public class OrderService {
         return order.getId();
     }
 
-    // 회원의 모든 주문 목록 조회
+    // 회원의 모든 주문 목록 조회 - N+1 해결
     @Transactional(readOnly = true)
     public List<Order> getOrders(Long userId) {
         User user = userService.getUser(userId);
-        return orderRepository.findByUser(user);
+        //return orderRepository.findByUser(user);
+        return orderRepository.findWithItemsByUser(user);
     }
 
-    // 단일 주문 상세 조회
+    // 단일 주문 상세 조회 - N+1 해결
     @Transactional(readOnly = true)
     public Order getOrder(Long orderId) {
-        return orderRepository.findById(orderId)
+        //return orderRepository.findById(orderId)
+        return orderRepository.findWithItemsById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)); // 주문 조회 실패
     }
 }
