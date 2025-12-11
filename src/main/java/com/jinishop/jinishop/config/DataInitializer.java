@@ -56,7 +56,7 @@ public class DataInitializer implements CommandLineRunner {
     private void createProducts() {
         System.out.println("=== 상품 + 옵션 + 재고 데이터 생성 중 ===");
 
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 1000; i++) {
 
             Product product = Product.builder()
                     .name("테스트 상품 " + i)

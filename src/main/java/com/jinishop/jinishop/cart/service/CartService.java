@@ -89,7 +89,7 @@ public class CartService {
         }
     }
 
-    // 상품 삭제
+    // 장바구니 상품 삭제
     @Transactional
     public void removeItem(Long cartItemId) {
         cartItemRepository.deleteById(cartItemId);
