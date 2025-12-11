@@ -1,15 +1,19 @@
 package com.jinishop.jinishop.user.controller;
 
 import com.jinishop.jinishop.global.response.ResponseDto;
+import com.jinishop.jinishop.security.CustomUserDetails;
 import com.jinishop.jinishop.security.JwtTokenProvider;
 import com.jinishop.jinishop.user.domain.User;
 import com.jinishop.jinishop.user.dto.AuthResponse;
 import com.jinishop.jinishop.user.dto.LoginRequest;
+import com.jinishop.jinishop.user.dto.RefreshTokenRequest;
 import com.jinishop.jinishop.user.dto.SignupRequest;
+import com.jinishop.jinishop.user.service.RefreshTokenService;
 import com.jinishop.jinishop.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +26,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenService refreshTokenService;
 
     // 회원가입
     @PostMapping("/signup")
@@ -36,9 +41,12 @@ public class AuthController {
         );
 
         // 회원가입 직후 Access Token 발급
-        String token = jwtTokenProvider.generateToken(user.getEmail());
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
 
-        return ResponseDto.ok(new AuthResponse(token));
+        refreshTokenService.saveRefreshToken(user, refreshToken);
+
+        return ResponseDto.ok(new AuthResponse(accessToken, refreshToken));
     }
 
     // 로그인
@@ -51,9 +59,33 @@ public class AuthController {
         );
         authenticationManager.authenticate(authToken);
 
-        // 통과하면 JWT 발급
-        String token = jwtTokenProvider.generateToken(request.getEmail());
+        User user = userService.getUserByEmail(request.getEmail());
 
-        return ResponseDto.ok(new AuthResponse(token));
+        // 통과하면 JWT 발급
+        String accessToken  = jwtTokenProvider.generateAccessToken(request.getEmail());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
+
+        refreshTokenService.saveRefreshToken(user, refreshToken);
+
+        return ResponseDto.ok(new AuthResponse(accessToken, refreshToken));
+    }
+
+    // 토큰 재발급
+    @PostMapping("/refresh")
+    public ResponseDto<AuthResponse> refresh(@RequestBody RefreshTokenRequest request) {
+        AuthResponse tokens = refreshTokenService.refresh(request.getRefreshToken());
+        return ResponseDto.ok(tokens);
+    }
+
+    @PostMapping("/logout")
+    public ResponseDto<Void> logout(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        // 토큰에서 꺼낸 유저 id로 User 엔티티 조회
+        User user = userService.getUser(userDetails.getId());
+        refreshTokenService.logout(user);
+
+        // 클라이언트에서는 받은 accessToken/refreshToken 둘 다 로컬에서 제거
+        return ResponseDto.ok(null);
     }
 }

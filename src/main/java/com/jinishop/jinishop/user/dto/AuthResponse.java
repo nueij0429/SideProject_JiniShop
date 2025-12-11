@@ -13,4 +13,5 @@ public class AuthResponse {
     // 로그인/회원가입 공통 응답 DTO
 
     private String accessToken;
+    private String refreshToken;
 }

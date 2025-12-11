@@ -23,9 +23,13 @@ public class JwtTokenProvider {
     @Value("${jwt.secret:my-secret-key-should-be-long}")
     private String secret;
 
-    // 30분 (예시)
+    // 30분
     @Value("${jwt.access-token-validity-ms:1800000}")
     private long accessTokenValidityInMs;
+
+    // 14일
+    @Value("${jwt.refresh-token-validity-ms:1209600000}")
+    private long refreshTokenValidityInMs;
 
     private final CustomUserDetailsService userDetailsService;
 
@@ -33,14 +37,28 @@ public class JwtTokenProvider {
 
     @PostConstruct
     public void init() {
-        // Secret string -> HMAC 키
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) { // 256bit = 32byte 이상
+            throw new IllegalArgumentException("jwt.secret must be at least 32 bytes");
+        }
+        this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
+    // Access Token 발급
+    public String generateAccessToken(String email) {
+        return generateToken(email, accessTokenValidityInMs);
+    }
+
+    // Refresh Token 발급
+    public String generateRefreshToken(String email) {
+        return generateToken(email, refreshTokenValidityInMs);
+    }
+
+
     // 토큰 생성
-    public String generateToken(String email) {
+    public String generateToken(String email, long validityMs) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + accessTokenValidityInMs);
+        Date expiry = new Date(now.getTime() + validityMs);
 
         return Jwts.builder()
                 .setSubject(email)

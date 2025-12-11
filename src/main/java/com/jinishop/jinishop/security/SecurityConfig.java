@@ -35,7 +35,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 인증 없이 허용할 경로
                         .requestMatchers(
-                                "/api/auth/**",   // 로그인, 회원가입
+                                "/api/auth/signup",
+                                "/api/auth/login",
+                                "/api/auth/refresh",
                                 "/health",        // 헬스체크 등
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
