@@ -33,6 +33,18 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final CartItemRepository cartItemRepository;
 
+    // 로그인한 회원의 기준 단일 주문 조회 (보안용)
+    @Transactional(readOnly = true)
+    public Order getOrderForUser(Long userId, Long orderId) {
+        Order order = getOrder(orderId); // 기존 N+1 해결 버전 사용
+
+        if (!order.getUser().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED_ORDER);
+        }
+
+        return order;
+    }
+    
     // 회원의 장바구니 기준으로 주문 생성 + 재고 차감
     @Transactional
     public Long placeOrder(Long userId) {

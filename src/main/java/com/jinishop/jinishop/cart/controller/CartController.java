@@ -35,25 +35,26 @@ public class CartController {
 
     // 장바구니에 상품 추가
     @PostMapping("/items")
-    public ResponseDto<Void> addCartItem(@RequestBody AddCartItemRequest request) {
-        cartService.addItem(request.getUserId(), request.getProductOptionId(), request.getQuantity());
+    public ResponseDto<Void> addCartItem(@AuthenticationPrincipal CustomUserDetails user, @RequestBody AddCartItemRequest request) {
+        cartService.addItem(user.getId(), request.getProductOptionId(), request.getQuantity());
         return ResponseDto.ok(null);
     }
 
     // 장바구니 아이템 수량 변경
     @PatchMapping("/items/{cartItemId}")
     public ResponseDto<Void> updateCartItemQuantity(
+            @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long cartItemId,
             @RequestBody UpdateCartItemQuantityRequest request
     ) {
-        cartService.updateItemQuantity(cartItemId, request.getQuantity());
+        cartService.updateItemQuantity(user.getId(), cartItemId, request.getQuantity());
         return ResponseDto.ok(null);
     }
 
     // 장바구니 아이템 삭제
     @DeleteMapping("/items/{cartItemId}")
-    public ResponseDto<Void> deleteCartItem(@PathVariable Long cartItemId) {
-        cartService.removeItem(cartItemId);
+    public ResponseDto<Void> deleteCartItem(@AuthenticationPrincipal CustomUserDetails user, @PathVariable Long cartItemId) {
+        cartService.removeItem(user.getId(), cartItemId);
         return ResponseDto.ok(null);
     }
 }

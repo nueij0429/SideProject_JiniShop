@@ -42,9 +42,11 @@ public enum ErrorCode {
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "장바구니가 존재하지 않습니다."),
     CART_EMPTY(BAD_REQUEST, "장바구니가 비어 있습니다."),
     CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "장바구니 아이템을 찾을 수 없습니다."),
+    ACCESS_DENIED_CART_ITEM(HttpStatus.FORBIDDEN, "본인의 장바구니 아이템이 아닙니다."),
 
     // 주문
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
+    ACCESS_DENIED_ORDER(HttpStatus.UNAUTHORIZED, "본인의 주문이 아닙니다."),
 
     // 토큰
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다."),

@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -76,10 +75,15 @@ public class CartService {
 
     // 상품 수량 변경
     @Transactional
-    public void updateItemQuantity(Long cartItemId, int quantity) {
+    public void updateItemQuantity(Long userId, Long cartItemId, int quantity) {
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND)); // 장바구니 상품을 찾을 수 없을 때
 
+        // 본인이 가진 장바구니 아이템인지 검증
+        if (!item.getCart().getUser().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED_CART_ITEM);
+        }
+        
         // dirty checking (상태 변경 검사)
         // 수량이 0 이하이면 삭제
         if (quantity <= 0) {
@@ -91,7 +95,14 @@ public class CartService {
 
     // 장바구니 상품 삭제
     @Transactional
-    public void removeItem(Long cartItemId) {
+    public void removeItem(Long userId, Long cartItemId) {
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND));
+
+        if (!item.getCart().getUser().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED_CART_ITEM);
+        }
+
         cartItemRepository.deleteById(cartItemId);
     }
 

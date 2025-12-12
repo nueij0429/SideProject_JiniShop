@@ -60,7 +60,7 @@ public class OrderController {
     // 주문 상세 조회
     @GetMapping("/{orderId}")
     public ResponseDto<OrderResponse> getOrder(@PathVariable Long orderId, @AuthenticationPrincipal CustomUserDetails user) {
-        Order order = orderService.getOrder(orderId); // 주문 + 아이템까지 한 번에 가져옴
+        Order order = orderService.getOrderForUser(user.getId(), orderId); // 주문 + 아이템까지 한 번에 가져옴
 
         //List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
 
