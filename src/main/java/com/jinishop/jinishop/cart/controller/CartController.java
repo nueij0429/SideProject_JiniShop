@@ -8,12 +8,14 @@ import com.jinishop.jinishop.cart.service.CartService;
 import com.jinishop.jinishop.global.response.ResponseDto;
 import com.jinishop.jinishop.product.dto.ProductResponse;
 import com.jinishop.jinishop.security.CustomUserDetails;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@SecurityRequirement(name = "bearerAuth") // 이 컨트롤러의 모든 엔드포인트는 JWT 필요하다고 Swagger에 표시
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/cart")
