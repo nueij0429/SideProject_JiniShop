@@ -7,6 +7,7 @@ import com.jinishop.jinishop.stock.dto.StockResponse;
 import com.jinishop.jinishop.stock.repository.StockRepository;
 import com.jinishop.jinishop.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class AdminStockController {
     private final StockService stockService;
 
     // 관리자용 전체 재고 목록 조회
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseDto<List<StockResponse>> getAllStocks() {
         List<Stock> stocks = stockRepository.findAll();
@@ -30,6 +32,7 @@ public class AdminStockController {
     }
 
     // 관리자용 재고 수동 조정
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{productOptionId}")
     public ResponseDto<Void> adjustStock(
             @PathVariable Long productOptionId,

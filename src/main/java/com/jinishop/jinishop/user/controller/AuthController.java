@@ -4,10 +4,7 @@ import com.jinishop.jinishop.global.response.ResponseDto;
 import com.jinishop.jinishop.security.CustomUserDetails;
 import com.jinishop.jinishop.security.JwtTokenProvider;
 import com.jinishop.jinishop.user.domain.User;
-import com.jinishop.jinishop.user.dto.AuthResponse;
-import com.jinishop.jinishop.user.dto.LoginRequest;
-import com.jinishop.jinishop.user.dto.RefreshTokenRequest;
-import com.jinishop.jinishop.user.dto.SignupRequest;
+import com.jinishop.jinishop.user.dto.*;
 import com.jinishop.jinishop.user.service.RefreshTokenService;
 import com.jinishop.jinishop.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -87,5 +84,16 @@ public class AuthController {
 
         // 클라이언트에서는 받은 accessToken/refreshToken 둘 다 로컬에서 제거
         return ResponseDto.ok(null);
+    }
+
+    //  현재 로그인한 회원 정보 조회
+    @GetMapping("/me")
+    public ResponseDto<MeResponse> getMe(
+            @AuthenticationPrincipal CustomUserDetails userDetails // CustomUserDetails 받아서 userId 추출
+    ) {
+        // 토큰에서 나온 id로 실제 User 엔티티 조회 - 실제 DB 값 사용
+        User user = userService.getUser(userDetails.getId());
+        MeResponse response = new MeResponse(user);
+        return ResponseDto.ok(response);
     }
 }

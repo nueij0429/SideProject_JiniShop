@@ -17,7 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // @PreAuthorize 같은 거 쓰고 싶으면
+@EnableMethodSecurity // @PreAuthorize 사용을 위함
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -42,6 +42,10 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
+
+                        // 관리자 전용 API (ROLE_ADMIN 필요)
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                         // 나머지는 인증 필요
                         .anyRequest().authenticated()
                 );
