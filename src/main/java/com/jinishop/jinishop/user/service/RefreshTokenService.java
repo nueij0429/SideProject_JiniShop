@@ -44,7 +44,7 @@ public class RefreshTokenService {
     // Refresh 요청 시 토큰 검증 + 재발급
     public AuthResponse refresh(String refreshToken) {
         // 1) JWT 형식/만료 검증
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
+        if (!jwtTokenProvider.validateTokenOrThrow(refreshToken)) {
             throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 

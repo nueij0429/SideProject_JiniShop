@@ -1,9 +1,8 @@
 package com.jinishop.jinishop.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.jinishop.jinishop.global.exception.BusinessException;
+import com.jinishop.jinishop.global.exception.ErrorCode;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
@@ -19,16 +18,16 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
-    // application.yml 에 설정해두면 좋음
-    @Value("${jwt.secret:my-secret-key-should-be-long}")
+    // application.properties에 추가
+    @Value("${jwt.secret}")
     private String secret;
 
     // 30분
-    @Value("${jwt.access-token-validity-ms:1800000}")
+    @Value("${jwt.access-token-validity-ms}")
     private long accessTokenValidityInMs;
 
     // 14일
-    @Value("${jwt.refresh-token-validity-ms:1209600000}")
+    @Value("${jwt.refresh-token-validity-ms}")
     private long refreshTokenValidityInMs;
 
     private final CustomUserDetailsService userDetailsService;
@@ -85,17 +84,17 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
-    // 토큰 유효성 검증
-    public boolean validateToken(String token) {
+    // 토큰 유효성 검증 및 예외 처리
+    public boolean validateTokenOrThrow(String token) {
         try {
             parseClaims(token);
             return true;
         } catch (ExpiredJwtException e) {
             // 만료된 토큰
-            return false;
-        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+        } catch (JwtException | IllegalArgumentException e) {
             // 형식 오류 등
-            return false;
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
     }
 

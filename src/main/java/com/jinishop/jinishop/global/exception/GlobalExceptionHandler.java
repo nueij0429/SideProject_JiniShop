@@ -12,9 +12,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ResponseDto<?>> handleBusinessException(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
+
+        ResponseDto<?> body = ResponseDto.error(
+                errorCode.getStatus().value(),
+                errorCode.getMessage()
+        );
+
         return ResponseEntity
                 .status(errorCode.getStatus())
-                .body(ResponseDto.error(errorCode.getStatus().value(), errorCode.getMessage()));
+                .body(body);
     }
 
     // 그 외 모든 예외 처리
@@ -22,10 +28,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseDto<?>> handleException(Exception e) {
         e.printStackTrace(); // 로그 출력
 
-        ErrorCode error = ErrorCode.INTERNAL_SERVER_ERROR;
+        ResponseDto<?> body = ResponseDto.error(
+                500,
+                "서버 에러가 발생했습니다."
+        );
 
         return ResponseEntity
-                .status(error.getStatus())
-                .body(ResponseDto.error(error.getStatus().value(), error.getMessage()));
+                .status(500)
+                .body(body);
     }
 }
