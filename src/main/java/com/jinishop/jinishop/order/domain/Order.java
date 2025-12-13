@@ -45,5 +45,11 @@ public class Order {
 
     // Order ↔ OrderItem 양방향 매핑으로 확장
     @OneToMany(mappedBy = "order")
+    @Builder.Default // builder가 null 넣는 문제 해결
     private List<OrderItem> orderItems = new ArrayList<>();
+
+    public void addOrderItem(OrderItem item) {
+        this.orderItems.add(item);
+        item.setOrder(this);
+    }
 }

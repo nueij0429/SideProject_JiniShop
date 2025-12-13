@@ -89,12 +89,12 @@ public class OrderService {
             stockService.decreaseStockWithPessimisticLock(option.getId(), cartItem.getQuantity());
 
             OrderItem orderItem = OrderItem.builder()
-                    .order(order)
                     .productOption(option)
                     .orderPrice(option.getProduct().getPrice())
                     .quantity(cartItem.getQuantity())
                     .build();
 
+            order.addOrderItem(orderItem); // 양 쪽 세팅
             orderItemRepository.save(orderItem);
         }
 
