@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>메인</title>
+</head>
+<body>
+<h2>메인 페이지</h2>
+
+<div id="userInfo"></div>
+
+<button id="adminBtn" style="display:none" onclick="location.href='/admin'">
+    관리자 페이지 이동
+</button>
+
+<button onclick="logout()">로그아웃</button>
+
+<script>
+    async function loadMe() {
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) {
+            location.href = "/login";
+            return;
+        }
+
+        const data = await res.json();
+        const user = data.data;
+
+        document.getElementById("userInfo").innerText =
+            `환영합니다 ${user.name}님 (${user.role})`;
+
+        if (user.role === "ADMIN") {
+            document.getElementById("adminBtn").style.display = "block";
+        }
+    }
+
+    async function logout() {
+        await fetch("/api/auth/logout", { method: "POST" });
+        location.href = "/login";
+    }
+
+    loadMe();
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-package com.jinishop.jinishop.user.dto;
+package com.jinishop.jinishop.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

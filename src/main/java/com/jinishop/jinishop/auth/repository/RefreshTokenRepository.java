@@ -1,8 +1,8 @@
-package com.jinishop.jinishop.user.repository;
+package com.jinishop.jinishop.auth.repository;
 
 import java.util.Optional;
 
-import com.jinishop.jinishop.user.domain.RefreshToken;
+import com.jinishop.jinishop.auth.domain.RefreshToken;
 import com.jinishop.jinishop.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -42,9 +42,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     // Authorization: Bearer <token> 에서 토큰만 추출
     private String resolveToken(HttpServletRequest request) {
+        // 1. Authorization 헤더 우선
         String bearer = request.getHeader("Authorization");
         if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
+        }
+
+        // 2. access_token 쿠키 fallback
+        if (request.getCookies() != null) {
+            for (var cookie : request.getCookies()) {
+                if ("access_token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
         }
         return null;
     }

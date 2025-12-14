@@ -1,13 +1,19 @@
-package com.jinishop.jinishop.user.controller;
+package com.jinishop.jinishop.auth.controller;
 
+import com.jinishop.jinishop.auth.dto.AuthResponse;
+import com.jinishop.jinishop.auth.dto.LoginRequest;
+import com.jinishop.jinishop.auth.dto.RefreshTokenRequest;
+import com.jinishop.jinishop.auth.dto.SignupRequest;
 import com.jinishop.jinishop.global.response.ResponseDto;
 import com.jinishop.jinishop.security.CustomUserDetails;
 import com.jinishop.jinishop.security.JwtTokenProvider;
 import com.jinishop.jinishop.user.domain.User;
 import com.jinishop.jinishop.user.dto.*;
-import com.jinishop.jinishop.user.service.RefreshTokenService;
+import com.jinishop.jinishop.auth.service.RefreshTokenService;
 import com.jinishop.jinishop.user.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -48,7 +54,7 @@ public class AuthController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseDto<AuthResponse> login(@RequestBody LoginRequest request) {
+    public ResponseDto<AuthResponse> login(@RequestBody LoginRequest request, HttpServletResponse response) {
         // 이메일 + 비밀번호 검증 (AuthenticationManager 사용)
         var authToken = new UsernamePasswordAuthenticationToken(
                 request.getEmail(),
@@ -64,6 +70,27 @@ public class AuthController {
 
         refreshTokenService.saveRefreshToken(user, refreshToken);
 
+        // access token cookie
+        ResponseCookie accessCookie = ResponseCookie.from("access_token", accessToken)
+                .httpOnly(true)
+                .secure(false)   // 로컬은 false, 운영은 true
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(60 * 30) // 30분
+                .build();
+
+        // refresh token cookie
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
+                .httpOnly(true)
+                .secure(false)
+                .path("/api/auth")
+                .sameSite("Lax")
+                .maxAge(60L * 60 * 24 * 14) // 14일
+                .build();
+
+        response.addHeader("Set-Cookie", accessCookie.toString());
+        response.addHeader("Set-Cookie", refreshCookie.toString());
+
         return ResponseDto.ok(new AuthResponse(accessToken, refreshToken));
     }
 
@@ -74,13 +101,30 @@ public class AuthController {
         return ResponseDto.ok(tokens);
     }
 
+    // 로그아웃
     @PostMapping("/logout")
     public ResponseDto<Void> logout(
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletResponse response
     ) {
         // 토큰에서 꺼낸 유저 id로 User 엔티티 조회
         User user = userService.getUser(userDetails.getId());
         refreshTokenService.logout(user);
+
+        ResponseCookie deleteAccess = ResponseCookie.from("access_token", "")
+                .httpOnly(true)
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        ResponseCookie deleteRefresh = ResponseCookie.from("refresh_token", "")
+                .httpOnly(true)
+                .path("/api/auth")
+                .maxAge(0)
+                .build();
+
+        response.addHeader("Set-Cookie", deleteAccess.toString());
+        response.addHeader("Set-Cookie", deleteRefresh.toString());
 
         // 클라이언트에서는 받은 accessToken/refreshToken 둘 다 로컬에서 제거
         return ResponseDto.ok(null);

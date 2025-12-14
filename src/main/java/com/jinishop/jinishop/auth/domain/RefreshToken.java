@@ -1,4 +1,4 @@
-package com.jinishop.jinishop.user.domain;
+package com.jinishop.jinishop.auth.domain;
 
 import com.jinishop.jinishop.user.domain.User;
 import jakarta.persistence.*;

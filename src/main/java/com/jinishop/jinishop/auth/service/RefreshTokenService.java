@@ -1,4 +1,4 @@
-package com.jinishop.jinishop.user.service;
+package com.jinishop.jinishop.auth.service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -6,10 +6,10 @@ import java.time.LocalDateTime;
 import com.jinishop.jinishop.global.exception.BusinessException;
 import com.jinishop.jinishop.global.exception.ErrorCode;
 import com.jinishop.jinishop.security.JwtTokenProvider;
-import com.jinishop.jinishop.user.domain.RefreshToken;
+import com.jinishop.jinishop.auth.domain.RefreshToken;
 import com.jinishop.jinishop.user.domain.User;
-import com.jinishop.jinishop.user.dto.AuthResponse;
-import com.jinishop.jinishop.user.repository.RefreshTokenRepository;
+import com.jinishop.jinishop.auth.dto.AuthResponse;
+import com.jinishop.jinishop.auth.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

@@ -59,8 +59,15 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + validityMs);
 
+        // userDetails에서 권한 가져오기
+        var userDetails = userDetailsService.loadUserByUsername(email);
+        var roles = userDetails.getAuthorities().stream()
+                .map(a -> a.getAuthority()) //  ex) "ROLE_ADMIN"
+                .toList();
+
         return Jwts.builder()
                 .setSubject(email)
+                .claim("roles", roles)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(key, SignatureAlgorithm.HS256)

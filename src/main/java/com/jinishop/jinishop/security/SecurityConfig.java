@@ -35,10 +35,14 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        
                         // 인증 없이 허용할 경로
                         .requestMatchers(
+                                "/",
                                 "/api/auth/signup",
+                                "/signup",
                                 "/api/auth/login",
+                                "/login",
                                 "/api/auth/refresh",
                                 "/health",        // 헬스체크 등
                                 "/swagger-ui/**",
@@ -46,6 +50,8 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // 관리자 전용 API (ROLE_ADMIN 필요)
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**").hasRole("ADMIN") // // Thymeleaf
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // 나머지는 인증 필요
