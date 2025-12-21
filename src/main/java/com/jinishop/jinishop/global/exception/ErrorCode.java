@@ -55,7 +55,9 @@ public enum ErrorCode {
 
     // 주문
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
-    ACCESS_DENIED_ORDER(HttpStatus.UNAUTHORIZED, "다른 사용자의 주문에는 접근할 수 없습니다.");
+    ACCESS_DENIED_ORDER(HttpStatus.UNAUTHORIZED, "다른 사용자의 주문에는 접근할 수 없습니다."),
+    ORDER_STATUS_REQUIRED(HttpStatus.BAD_REQUEST, "주문 상태 값은 필수입니다."),
+    ORDER_STATUS_INVALID(HttpStatus.BAD_REQUEST, "유효하지 않은 주문 상태입니다.");
     
     private final HttpStatus status;
     private final String message;

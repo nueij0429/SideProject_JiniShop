@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>WS Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h3>WebSocket STOMP Test</h3>
+
+<div>
+    AccessToken:
+    <input id="token" style="width: 600px;" placeholder="토큰 입력" />
+    <button onclick="connect()">CONNECT</button>
+</div>
+
+<hr/>
+
+<div>
+    <button onclick="subscribeUserQueue()">/user/queue/orders 구독</button>
+</div>
+
+<pre id="log" style="border:1px solid #ddd; padding:12px; height: 320px; overflow:auto;"></pre>
+
+<script>
+    let stomp = null;
+
+    function log(msg) {
+        const el = document.getElementById("log");
+        el.textContent += msg + "\n";
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function connect() {
+        const token = document.getElementById("token").value.trim();
+        const sock = new SockJS("/ws");
+        stomp = Stomp.over(sock);
+        stomp.connect(
+            { Authorization: "Bearer " + token },
+            () => log("CONNECTED"),
+            (e) => log("CONNECT FAIL: " + JSON.stringify(e))
+        );
+    }
+
+    function subscribeUserQueue() {
+        if (!stomp) return log("먼저 CONNECT를 해주세요");
+        stomp.subscribe("/user/queue/orders", (msg) => {
+            log("RECV: " + msg.body);
+        });
+        log("SUBSCRIBED /user/queue/orders");
+    }
+</script>
+</body>
+</html>
