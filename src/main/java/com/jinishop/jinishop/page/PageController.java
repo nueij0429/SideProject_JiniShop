@@ -25,4 +25,10 @@ public class PageController {
     public String adminPage() {
         return "admin";
     }
+
+    // 관리자 모니터링 페이지
+    @GetMapping("/admin/monitoring")
+    public String adminMonitoringPage() {
+        return "admin/monitoring";
+    }
 }

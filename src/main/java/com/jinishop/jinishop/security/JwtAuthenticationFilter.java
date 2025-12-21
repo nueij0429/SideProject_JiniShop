@@ -26,15 +26,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = resolveToken(request);
 
+        System.out.println("[JWT] uri=" + request.getRequestURI()
+                + ", hasToken=" + (token != null)
+                + ", cookieHeader=" + request.getHeader("Cookie"));
+
         try {
             if (StringUtils.hasText(token)) {
                 jwtTokenProvider.validateTokenOrThrow(token);
                 var authentication = jwtTokenProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                System.out.println("[JWT] auth=" + authentication.getAuthorities());
             }
         } catch (BusinessException ex) {
-                // 인증 관련 예외를 request에 태워두고, 실제 응답은 EntryPoint에서 처리
-                request.setAttribute("authException", ex);
+            System.out.println("[JWT] fail code=" + ex.getErrorCode());
+            // 인증 관련 예외를 request에 태워두고, 실제 응답은 EntryPoint에서 처리
+            request.setAttribute("authException", ex);
         }
 
         filterChain.doFilter(request, response);
@@ -57,5 +64,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         return null;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return uri.equals("/favicon.ico")
+                || uri.startsWith("/.well-known/")
+                || uri.startsWith("/css/")
+                || uri.startsWith("/js/")
+                || uri.startsWith("/images/")
+                || uri.startsWith("/webjars/");
     }
 }

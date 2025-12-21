@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin Monitoring</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; }
+        .title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+        .row { display:flex; justify-content: space-between; margin: 6px 0; }
+        .badge { display:inline-block; padding: 4px 10px; border-radius: 999px; border: 1px solid #ddd; }
+        .ok { border-color: #1b7f3a; color:#1b7f3a; }
+        .bad { border-color: #b00020; color:#b00020; }
+        .desc { margin-top:10px; font-size:12px; color:#666; line-height: 1.5; }
+        .bar { height: 10px; background:#eee; border-radius:999px; overflow:hidden; margin-top:8px; }
+        .fill { height: 100%; background:#333; width: 0%; }
+        a { color: #333; }
+        code { background:#f6f6f6; padding:2px 6px; border-radius:6px; }
+    </style>
+</head>
+
+<body>
+
+<div class="row" style="align-items:center;">
+    <div style="font-size:22px; font-weight:800;">관리자 모니터링</div>
+    <div>
+        <a href="/admin">관리자 홈</a>
+    </div>
+</div>
+
+<hr style="margin:16px 0;"/>
+
+<div class="grid">
+
+    <!-- 1. 서비스 Health -->
+    <div class="card">
+        <div class="title">서비스 상태 (Health)</div>
+
+        <div class="row">
+            <div>Status</div>
+            <div>
+                <span id="healthBadge" class="badge bad">N/A</span>
+            </div>
+        </div>
+
+        <div class="desc">
+            • 서버가 살아있는지(UP) 바로 확인하는 카드<br/>
+            • DOWN이면 DB/외부 의존성 문제 가능성 큼
+        </div>
+    </div>
+
+    <!-- 2. HTTP 요청/에러 -->
+    <div class="card">
+        <div class="title">요청/에러 (HTTP)</div>
+
+        <div class="row">
+            <div>총 요청 수 (COUNT)</div>
+            <div id="httpTotalCount">N/A</div>
+        </div>
+
+        <div class="row">
+            <div>5xx 에러 수 (COUNT)</div>
+            <div id="http5xxCount">N/A</div>
+        </div>
+
+        <div class="desc">
+            • <code>http.server.requests</code>에서 statistic이 <b>COUNT</b>인 값만 표시<br/>
+            • 5xx는 <code>outcome=SERVER_ERROR</code> 또는 <code>status=500/502/503/504</code> 합산 fallback<br/>
+            • 5xx가 갑자기 증가하면 장애/예외 폭증 신호
+        </div>
+    </div>
+
+    <!-- 3. JVM Memory -->
+    <div class="card">
+        <div class="title">JVM 메모리</div>
+
+        <div class="row">
+            <div>Used</div>
+            <div id="jvmUsed">N/A</div>
+        </div>
+
+        <div class="row">
+            <div>Max</div>
+            <div id="jvmMax">N/A</div>
+        </div>
+
+        <div class="row">
+            <div>Usage %</div>
+            <div id="jvmUsedPct">N/A</div>
+        </div>
+
+        <div class="bar">
+            <div id="jvmUsedBar" class="fill" style="width:0%;"></div>
+        </div>
+
+        <div class="desc">
+            • 메모리가 높아지면 GC 증가/응답 지연 가능<br/>
+        </div>
+    </div>
+
+    <!-- 4. DB Connections (HikariCP) -->
+    <div class="card">
+        <div class="title">DB 커넥션 풀 (HikariCP)</div>
+
+        <div class="row">
+            <div>Active</div>
+            <div id="dbActive">N/A</div>
+        </div>
+
+        <div class="row">
+            <div>Max</div>
+            <div id="dbMax">N/A</div>
+        </div>
+
+        <div class="row">
+            <div>Pending (대기)</div>
+            <div id="dbPending">N/A</div>
+        </div>
+
+        <div class="row">
+            <div>Usage %</div>
+            <div id="dbUsedPct">N/A</div>
+        </div>
+
+        <div class="bar">
+            <div id="dbUsedBar" class="fill" style="width:0%;"></div>
+        </div>
+
+        <div class="desc">
+            • Active가 Max에 가까우면 DB 커넥션 포화 위험<br/>
+            • Pending이 0보다 크면 “커넥션을 못 얻고 기다리는 요청”이 있다는 뜻 (병목 신호)
+        </div>
+    </div>
+
+    <!-- 5. CPU / Threads -->
+    <div class="card">
+        <div class="title">서버 자원 (CPU / Threads)</div>
+
+        <div class="row">
+            <div>CPU 사용률</div>
+            <div id="cpuUsage">N/A</div>
+        </div>
+
+        <div class="row">
+            <div>Live Threads</div>
+            <div id="liveThreads">N/A</div>
+        </div>
+
+        <div class="desc">
+            • CPU는 <code>process.cpu.usage</code> 우선, 없으면 <code>system.cpu.usage</code> 사용<br/>
+            • 스레드가 비정상적으로 증가하면 데드락/대기/과도한 요청 처리 가능성
+        </div>
+    </div>
+
+    <!-- 6. 확인용 안내 -->
+    <div class="card">
+        <div class="title">빠른 판단 가이드</div>
+        <div class="desc">
+            • <b>Health가 DOWN</b> → DB/의존성부터 확인<br/>
+            • <b>5xx 증가</b> → 서버 예외 로그/최근 배포/외부 API 장애 의심<br/>
+            • <b>DB Pending &gt; 0</b> → 커넥션 풀 포화/쿼리 지연(N+1, 인덱스, 락) 의심<br/>
+            • <b>CPU 높음</b> → 무한루프/GC/과도한 연산/트래픽 급증 의심<br/>
+            • <b>Threads 폭증</b> → 동기 블로킹, 외부 API 대기, DB 대기 가능성
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 특정 DOM에 텍스트 넣기
+    function setText(id, text) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    }
+
+    // 숫자를 반올림하고 천단위 콤마
+    function formatInt(v) {
+        if (v === null || v === undefined) return "N/A";
+        return Math.round(v).toLocaleString();
+    }
+
+    // 소수점 2자리 퍼센트 표기
+    function formatPct(v) {
+        if (v === null || v === undefined) return "N/A";
+        return v.toFixed(2) + "%";
+    }
+
+    // JSON 수신
+    async function loadMonitoring() {
+        const res = await fetch("/api/admin/monitoring");
+        if (!res.ok) {
+            alert("모니터링 데이터 조회 실패");
+            return;
+        }
+
+        const data = await res.json();
+
+        // Health
+        const status = data.health?.status ?? "N/A";
+        setText("healthBadge", status);
+
+        const badge = document.getElementById("healthBadge");
+        if (badge) {
+            badge.classList.remove("ok", "bad");
+            badge.classList.add(status === "UP" ? "ok" : "bad");
+        }
+
+        // HTTP
+        setText("httpTotalCount", formatInt(data.httpTotalCount));
+        setText("http5xxCount", formatInt(data.http5xxCount));
+
+        // JVM
+        setText("jvmUsed", formatInt(data.jvmUsed));
+        setText("jvmMax", formatInt(data.jvmMax));
+        setText("jvmUsedPct", formatPct(data.jvmUsedPct));
+
+        const bar = document.getElementById("jvmUsedBar");
+        if (bar) {
+            bar.style.width =
+                data.jvmUsedPct != null ? data.jvmUsedPct + "%" : "0%";
+        }
+
+        //  DB
+        setText("dbActive", formatInt(data.dbActive));
+        setText("dbPending", formatInt(data.dbPending));
+        setText("dbMax", formatInt(data.dbMax));
+        setText("dbUsedPct", formatInt(data.dbUsedPct));
+
+        const dbBar = document.getElementById("dbUsedBar");
+        if (dbBar) {
+            dbBar.style.width =
+                data.dbUsedPct != null ? data.dbUsedPct + "%" : "0%";
+        }
+
+        // CPU / Threads
+        setText("cpuUsage", formatPct(data.cpuUsagePct));
+        setText("liveThreads", formatInt(data.liveThreads));
+    }
+
+    loadMonitoring();
+</script>
+
+
+</body>
+</html>

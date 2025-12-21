@@ -51,6 +51,11 @@ dependencies {
     implementation 'org.springframework.kafka:spring-kafka'              // Kafka
     implementation 'org.springframework.retry:spring-retry'              // Rabbit listener retry
     implementation 'org.springframework.boot:spring-boot-starter-aop'    // spring-retry에 필요
+
+    // 모니터링
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // actuator metrics를 Prometheus 형식으로 내보내기
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 }
 
 tasks.named('test') {

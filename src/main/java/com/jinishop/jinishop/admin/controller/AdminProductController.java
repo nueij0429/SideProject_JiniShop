@@ -15,13 +15,13 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/api/admin/products")
 public class AdminProductController {
 
     private final ProductService productService;
 
     // 관리자용 - 상품 등록
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseDto<ProductResponse> createProduct(@RequestBody ProductCreateRequest request) {
         // 상태 값이 없으면 기본 STOP_SALE
@@ -39,7 +39,6 @@ public class AdminProductController {
     }
 
     // 관리자용 - 상품 수정
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{productId}")
     public ResponseDto<ProductResponse> updateProduct(
             @PathVariable Long productId,
@@ -62,7 +61,6 @@ public class AdminProductController {
     }
 
     // 관리자용 - 상품 삭제
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{productId}")
     public ResponseDto<Void> deleteProduct(@PathVariable Long productId) {
         productService.deleteProduct(productId);

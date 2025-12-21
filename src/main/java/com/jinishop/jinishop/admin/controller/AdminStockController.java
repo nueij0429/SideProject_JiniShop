@@ -14,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/api/admin/stocks")
 public class AdminStockController {
 
@@ -21,7 +22,6 @@ public class AdminStockController {
     private final StockService stockService;
 
     // 관리자용 전체 재고 목록 조회
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseDto<List<StockResponse>> getAllStocks() {
         List<Stock> stocks = stockRepository.findAll();
@@ -32,7 +32,6 @@ public class AdminStockController {
     }
 
     // 관리자용 재고 수동 조정
-    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{productOptionId}")
     public ResponseDto<Void> adjustStock(
             @PathVariable Long productOptionId,
